@@ -51,7 +51,7 @@ typedef struct __P2P_Response {
     uint16_t    flag;
     uint16_t    statusCode; // 状态码
     char        msg[64];    // 原因描述
-    int32_t     number;     // 后面有多少个Peer_Info
+    uint32_t    number;     // 后面有多少个Peer_Info
 } __attribute_packed__ P2P_Response;
 static const uint32_t P2P_Response_Size = sizeof(P2P_Response);
 
