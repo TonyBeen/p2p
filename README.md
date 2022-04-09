@@ -37,5 +37,5 @@ p2p server &amp; client
       process_worker_num: 4
 
 #### 编译
-make
-make clean
+    make
+    make clean
