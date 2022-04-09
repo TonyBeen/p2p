@@ -1,3 +1,5 @@
+config
+config/config.yaml
 main
 p2pserver
 
