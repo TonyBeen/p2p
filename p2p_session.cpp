@@ -61,7 +61,7 @@ void P2PSession::onReadEvent(int fd)
 
         LOGD("%s() client %d [%s:%u] send request 0x%04x", __func__, fd, addr->getIP().c_str(), addr->getPort(), req.flag);
         switch (req.flag) {
-        case P2P_REQUEST_SEND_PEER_INFO:
+        case P2P_REQUEST_SEND_PEER_INFO:    // 客户端发送本机信息
             {
                 response.flag = P2P_RESPONSE_SEND_PEER_INFO;
                 String8 name = req.peer_info.peer_name;
