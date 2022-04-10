@@ -121,11 +121,8 @@ void P2PSession::onReadEvent(int fd)
         case P2P_REQUEST_CONNECT_TO_PEER:
             {
                 // TODO: 将对端想要连接的uuid相关信息从redis拿出来，并告知此客户端有人想要与其建立连接
-                // 此条作废。信息即已给出，则由客户端自己进行管理
+                // 由于无法拿到另一端的tcp socket导致无法发送数据，此条作废。信息即已给出，则由客户端自己进行管理
                 response.flag = P2P_RESPONSE_CONNECT_TO_PEER;
-                // TODO: 无法拿到另一端的tcp socket，无法发送数据
-                response.statusCode = static_cast<uint16_t>(P2PStatus::OK);
-                strncpy(response.msg, Status2String(P2PStatus::OK).c_str(), sizeof(response.msg));
                 response.number = 0;
             }
             break;
