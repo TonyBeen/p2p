@@ -51,7 +51,7 @@ private:
     bool mIsInit : 1;           // 是否初始化
     bool mIsSocket : 1;         // 是否socket
     bool mIsSysNonblock : 1;    // 是否hook非阻塞
-    bool mIsUserNonblock : 1;   // 是否主动设置为非阻塞
+    bool mIsUserNonblock : 1;   // 是否用户主动设置为非阻塞. 作用是当用户设置了阻塞后但数据未到达可以使用协程将当前堆栈保存，当数据到达后再恢复
     bool mIsClosed : 1;         // 是否关闭
 
     int      mFd;               // 文件句柄
