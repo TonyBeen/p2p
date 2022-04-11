@@ -78,7 +78,7 @@ struct timer_info {
  * @tparam OriginFun 函数指针
  * @tparam Args 函数所需要的参数
  * @param fd 套接字描述符
- * @param fun 函数指针
+ * @param fun hook住的原生函数指针
  * @param hook_fun_name 函数指针对应的函数名字
  * @param event 事件类型(READ || WRITE)
  * @param type SO_RCVTIMEO || SO_SNDTIMEO
