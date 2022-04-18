@@ -44,7 +44,7 @@ typedef struct __P2S_Request {
     uint16_t    flag;           // 请求种类
     Peer_Info   peer_info;
 } __attribute_packed__ P2S_Request;
-static const uint32_t P2P_Request_Size = sizeof(P2S_Request);
+static const uint32_t P2S_Request_Size = sizeof(P2S_Request);
 
 // 服务端响应结构体
 typedef struct __P2S_Response {
@@ -53,7 +53,7 @@ typedef struct __P2S_Response {
     char        msg[64];    // 原因描述
     uint32_t    number;     // 后面有多少个Peer_Info
 } __attribute_packed__ P2S_Response;
-static const uint32_t P2P_Response_Size = sizeof(P2S_Response);
+static const uint32_t P2S_Response_Size = sizeof(P2S_Response);
 
 // TODO: 修改为P2P需要的状态码
 #define P2P_STATUS_MAP(XX)                                                    \

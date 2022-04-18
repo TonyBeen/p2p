@@ -45,7 +45,7 @@ void P2PSession::onReadEvent(int fd)
         response.statusCode = (uint16_t)P2PStatus::OK;
         strcpy(response.msg, Status2String(P2PStatus::OK).c_str());
 
-        int recvSize = mClientSocket->recv(&req, P2P_Request_Size);
+        int recvSize = mClientSocket->recv(&req, P2S_Request_Size);
         if (recvSize <= 0) {
             if (errno != EAGAIN) {
                 LOGE("%s() recv error. [%d, %s]", __func__, errno, strerror(errno));
@@ -54,7 +54,7 @@ void P2PSession::onReadEvent(int fd)
         }
 
         const Address::SP &addr = mClientSocket->getRemoteAddr();
-        if (recvSize != P2P_Request_Size) {
+        if (recvSize != P2S_Request_Size) {
             LOGW("client %d [%s:%u] send invalid request", fd, addr->getIP().c_str(), addr->getPort());
             continue;
         }
