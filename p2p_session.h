@@ -31,9 +31,9 @@ public:
     virtual void onWritEvent(int fd) override;
 
 protected:
-    void onRequestSendPeerInfo(const P2P_Request &req);
-    void onRequestGetPeerInfo(const P2P_Request &req);
-    void onRequestConnectToPeer(const P2P_Request &req);
+    void onRequestSendPeerInfo(const P2S_Request &req);
+    void onRequestGetPeerInfo(const P2S_Request &req);
+    void onRequestConnectToPeer(const P2S_Request &req);
 
 protected:
     Socket::SP  mClientSocket;

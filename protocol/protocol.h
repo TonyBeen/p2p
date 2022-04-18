@@ -40,20 +40,20 @@ typedef struct __Peer_Info {
 static const uint32_t Peer_Info_Size = sizeof(Peer_Info);
 
 // 发送给服务端结构体
-typedef struct __P2P_Request {
+typedef struct __P2S_Request {
     uint16_t    flag;           // 请求种类
     Peer_Info   peer_info;
-} __attribute_packed__ P2P_Request;
-static const uint32_t P2P_Request_Size = sizeof(P2P_Request);
+} __attribute_packed__ P2S_Request;
+static const uint32_t P2P_Request_Size = sizeof(P2S_Request);
 
 // 服务端响应结构体
-typedef struct __P2P_Response {
+typedef struct __P2S_Response {
     uint16_t    flag;
     uint16_t    statusCode; // 状态码
     char        msg[64];    // 原因描述
     uint32_t    number;     // 后面有多少个Peer_Info
-} __attribute_packed__ P2P_Response;
-static const uint32_t P2P_Response_Size = sizeof(P2P_Response);
+} __attribute_packed__ P2S_Response;
+static const uint32_t P2P_Response_Size = sizeof(P2S_Response);
 
 // TODO: 修改为P2P需要的状态码
 #define P2P_STATUS_MAP(XX)                                                    \

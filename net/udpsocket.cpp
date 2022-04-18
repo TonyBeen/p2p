@@ -45,7 +45,7 @@ void UdpServer::stop()
 
 void UdpServer::onReadEvent()
 {
-    P2P_Request req;
+    P2S_Request req;
     Address addr;
 
     std::shared_ptr<RedisPool::RedisAPI> redis;
@@ -56,15 +56,15 @@ void UdpServer::onReadEvent()
     } while (redis == nullptr && tryTimes > 0); // TODO: 循环多少次合适
 
     while (true) {
-        int readSize = recvfrom(&req, sizeof(P2P_Request), addr, 0);
+        int readSize = recvfrom(&req, sizeof(P2S_Request), addr, 0);
         if (readSize < 0) {
             if (errno != EAGAIN) {
                 LOGE("%s() reacvfrom error. [%d, %s]", __func__, errno, strerror(errno));
             }
             break;
         }
-        if (readSize != sizeof(P2P_Request)) {
-            LOGW("read size != sizeof(P2P_Request");
+        if (readSize != sizeof(P2S_Request)) {
+            LOGW("read size != sizeof(P2S_Request");
             continue;
         }
 

@@ -28,8 +28,8 @@ P2PSession::~P2PSession()
 
 void P2PSession::onReadEvent(int fd)
 {
-    P2P_Request req;
-    P2P_Response response;
+    P2S_Request req;
+    P2S_Response response;
 
     std::vector<Peer_Info> peerInfoVec;
     std::shared_ptr<RedisPool::RedisAPI> redis;
@@ -40,8 +40,8 @@ void P2PSession::onReadEvent(int fd)
     } while (redis == nullptr && tryTimes > 0); // TODO: 循环多少次合适
 
     while (true) {
-        memset(&response, 0, sizeof(P2P_Response));
-        memset(&req, 0, sizeof(P2P_Request));
+        memset(&response, 0, sizeof(P2S_Response));
+        memset(&req, 0, sizeof(P2S_Request));
         response.statusCode = (uint16_t)P2PStatus::OK;
         strcpy(response.msg, Status2String(P2PStatus::OK).c_str());
 
@@ -131,7 +131,7 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
-        mClientSocket->send(&response, sizeof(P2P_Response));
+        mClientSocket->send(&response, sizeof(P2S_Response));
         for (auto &info : peerInfoVec) {
             mClientSocket->send(&info, sizeof(Peer_Info));
         }
@@ -144,17 +144,17 @@ void P2PSession::onWritEvent(int fd)
     LOGD("%s()", __func__);
 }
 
-void P2PSession::onRequestSendPeerInfo(const P2P_Request &req)
+void P2PSession::onRequestSendPeerInfo(const P2S_Request &req)
 {
 
 }
 
-void P2PSession::onRequestGetPeerInfo(const P2P_Request &req)
+void P2PSession::onRequestGetPeerInfo(const P2S_Request &req)
 {
 
 }
 
-void P2PSession::onRequestConnectToPeer(const P2P_Request &req)
+void P2PSession::onRequestConnectToPeer(const P2S_Request &req)
 {
 
 }
