@@ -9,10 +9,14 @@
 #define __EULAR_P2P_PROTOCOL_H__
 
 #include "endian.hpp"
+#include <utils/Buffer.h>
 #include <string>
 #include <stdint.h>
 
 #define __attribute_packed__        __attribute__((packed))
+
+#define SPECIAL_IDENTIFIER 0x55647382
+#define P2P_HEADER 16
 
 #define P2P_REQUEST                     0x0100
 #define P2P_REQUEST_SEND_PEER_INFO      (P2P_REQUEST + 1)   // 发送本机信息
@@ -29,6 +33,55 @@
 
 #define UUID_SIZE       48
 #define PEER_NAME_SIZE  32
+
+/**
+
+flag: 专用标志符 0x55 0x64 0x73 0x82
+cmd: 命令
+time: 发送此帧的时间
+length: 携带的数据长度
+data: 数据
+
+|                 8byte                 |
+|-------------------|-------------------|
+|    flag(4byte)    | cmd(2b) |0x00 0x00|
+|-------------------|-------------------|
+|    time(4byte)    |   length(4byte)   |
+|-------------------|-------------------|
+|               data(...)               |
+|-------------------|-------------------|
+
+*/
+
+class ProtocolParser
+{
+public:
+    ProtocolParser();
+    ~ProtocolParser();
+
+    bool parser(const uint8_t *buf, size_t len);
+    bool parser(const eular::ByteBuffer &buffer);
+
+    uint16_t commnd() const;
+    uint32_t time() const;
+    uint32_t length() const;
+    eular::ByteBuffer &data();
+
+protected:
+    uint16_t            mCommnd;
+    uint32_t            mSendTime;
+    eular::ByteBuffer   mDataBuffer;
+};
+
+class ProtocolGenerator
+{
+public:
+    ProtocolGenerator();
+    ~ProtocolGenerator();
+
+    static eular::ByteBuffer generator(uint16_t cmd, uint32_t time, const uint8_t *data, size_t len);
+    static eular::ByteBuffer generator(uint16_t cmd, uint32_t time, const eular::ByteBuffer &data);
+};
 
 // 服务端响应获取客户端结构体
 typedef struct __Peer_Info {
