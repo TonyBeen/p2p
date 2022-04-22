@@ -16,7 +16,7 @@
 #define __attribute_packed__        __attribute__((packed))
 
 #define SPECIAL_IDENTIFIER 0x55647382
-#define P2P_HEADER 16
+#define P2P_HEADER_SIZE 16
 
 #define P2P_REQUEST                     0x0100
 #define P2P_REQUEST_SEND_PEER_INFO      (P2P_REQUEST + 1)   // 发送本机信息
@@ -76,11 +76,11 @@ protected:
 class ProtocolGenerator
 {
 public:
-    ProtocolGenerator();
-    ~ProtocolGenerator();
+    ProtocolGenerator() {}
+    ~ProtocolGenerator() {}
 
-    static eular::ByteBuffer generator(uint16_t cmd, uint32_t time, const uint8_t *data, size_t len);
-    static eular::ByteBuffer generator(uint16_t cmd, uint32_t time, const eular::ByteBuffer &data);
+    static eular::ByteBuffer generator(uint16_t cmd, const uint8_t *data, size_t len);
+    static eular::ByteBuffer generator(uint16_t cmd, const eular::ByteBuffer &data);
 };
 
 // 服务端响应获取客户端结构体
