@@ -59,8 +59,8 @@ public:
     ProtocolParser();
     ~ProtocolParser();
 
-    bool parser(const uint8_t *buf, size_t len);
-    bool parser(const eular::ByteBuffer &buffer);
+    bool parse(const uint8_t *buf, size_t len);
+    bool parse(const eular::ByteBuffer &buffer);
 
     uint16_t commnd() const;
     uint32_t time() const;

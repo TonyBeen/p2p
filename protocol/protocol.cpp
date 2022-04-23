@@ -46,8 +46,8 @@ static inline const uint8_t *decode8u(const uint8_t *buf, uint8_t *n)
 static inline uint8_t *encode16u(uint8_t *buf, uint16_t n)
 {
 #if EULAR_BYTE_ORDER == EULAR_BIG_ENDIAN
-    *(buf + 0) = (n & 0xff);
-    *(buf + 1) = (n >> 8);
+    *(buf + 0) = ((n >> 0) & 0xFF);
+    *(buf + 1) = ((n >> 8) & 0xFF);
 #elif EULAR_BYTE_ORDER == EULAR_LITTLE_ENDIAN
     *(buf + 0) = n;
 #else
@@ -74,10 +74,10 @@ static inline const uint8_t *decode16u(const uint8_t *buf, uint16_t *n)
 static inline uint8_t *encode32u(uint8_t *buf, uint32_t n)
 {
 #if EULAR_BYTE_ORDER == EULAR_BIG_ENDIAN
-    *(uint8_t *)(buf + 0) = (n >>  0) & 0xff;
-    *(uint8_t *)(buf + 1) = (n >>  8) & 0xff;
-    *(uint8_t *)(buf + 2) = (n >> 16) & 0xff;
-    *(uint8_t *)(buf + 3) = (n >> 24) & 0xff;
+    *(uint8_t *)(buf + 0) = (n >>  0) & 0xFF;
+    *(uint8_t *)(buf + 1) = (n >>  8) & 0xFF;
+    *(uint8_t *)(buf + 2) = (n >> 16) & 0xFF;
+    *(uint8_t *)(buf + 3) = (n >> 24) & 0xFF;
 #elif EULAR_BYTE_ORDER == EULAR_LITTLE_ENDIAN
     *(uint32_t *)buf = n;
 #else
@@ -115,7 +115,7 @@ ProtocolParser::~ProtocolParser()
 
 }
 
-bool ProtocolParser::parser(const uint8_t *buf, size_t len)
+bool ProtocolParser::parse(const uint8_t *buf, size_t len)
 {
     if (!buf || len < P2P_HEADER_SIZE) {
         return false;
@@ -138,9 +138,9 @@ bool ProtocolParser::parser(const uint8_t *buf, size_t len)
     return true;
 }
 
-bool ProtocolParser::parser(const eular::ByteBuffer &buffer)
+bool ProtocolParser::parse(const eular::ByteBuffer &buffer)
 {
-    return parser(buffer.const_data(), buffer.size());
+    return parse(buffer.const_data(), buffer.size());
 }
 
 uint16_t ProtocolParser::commnd() const
@@ -175,8 +175,8 @@ eular::ByteBuffer ProtocolGenerator::generator(uint16_t cmd, const uint8_t *data
     temp = encode32u(temp, SPECIAL_IDENTIFIER);
     temp = encode16u(temp, cmd);
     temp = encode16u(temp, 0);
-    temp = encode32u(temp, (uint32_t)Time::SystemTime());
-    temp = encode32u(temp, len);
+    temp = encode32u(temp, 0);
+    temp = encode32u(temp, (data ? len : 0));
     memcpy(temp, data, len);
 
 ret:

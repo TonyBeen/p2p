@@ -30,14 +30,11 @@ void P2PSession::onReadEvent(int fd)
 {
     P2S_Request req;
     P2S_Response response;
+    ByteBuffer buffer;
+    ProtocolParser parser;
 
     std::vector<Peer_Info> peerInfoVec;
-    std::shared_ptr<RedisPool::RedisAPI> redis;
-    int tryTimes = 10;
-    do {
-        redis = RedisManager::get()->getRedis();
-        --tryTimes;
-    } while (redis == nullptr && tryTimes > 0); // TODO: 循环多少次合适
+    std::shared_ptr<RedisPool::RedisAPI> redis = RedisManager::get()->getRedis();
 
     while (true) {
         memset(&response, 0, sizeof(P2S_Response));
@@ -45,7 +42,7 @@ void P2PSession::onReadEvent(int fd)
         response.statusCode = (uint16_t)P2PStatus::OK;
         strcpy(response.msg, Status2String(P2PStatus::OK).c_str());
 
-        int recvSize = mClientSocket->recv(&req, P2S_Request_Size);
+        int recvSize = mClientSocket->recv(buffer);
         if (recvSize <= 0) {
             if (errno != EAGAIN) {
                 LOGE("%s() recv error. [%d, %s]", __func__, errno, strerror(errno));
@@ -53,14 +50,20 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
-        const Address::SP &addr = mClientSocket->getRemoteAddr();
-        if (recvSize != P2S_Request_Size) {
-            LOGW("client %d [%s:%u] send invalid request", fd, addr->getIP().c_str(), addr->getPort());
-            continue;
+        // FIXME: 当多个数据包到达时ProtocolParser只能解析出一个，之后的无法解析出
+        if (parser.parse(buffer) == false) {
+            break;
         }
 
+        ByteBuffer &data = parser.data();
+        if (data.size() != P2S_Request_Size) {
+            LOGW("recv an invalid request. buffer size %zu", data.size());
+        }
+        memcpy(&req, data.const_data(), P2S_Request_Size);
+
+        const Address::SP &addr = mClientSocket->getRemoteAddr();
         LOGD("%s() client %d [%s:%u] send request 0x%04x", __func__, fd, addr->getIP().c_str(), addr->getPort(), req.flag);
-        switch (req.flag) {
+        switch (parser.commnd()) {
         case P2P_REQUEST_SEND_PEER_INFO:    // 客户端发送本机信息
             {
                 response.flag = P2P_RESPONSE_SEND_PEER_INFO;
@@ -131,10 +134,13 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
+        ByteBuffer temp;
+        temp.append((uint8_t *)&response, sizeof(P2S_Response));
         mClientSocket->send(&response, sizeof(P2S_Response));
-        for (auto &info : peerInfoVec) {
-            mClientSocket->send(&info, sizeof(Peer_Info));
-        }
+        temp.append((uint8_t *)&peerInfoVec[0], sizeof(Peer_Info) * peerInfoVec.size());
+        ByteBuffer retsult = ProtocolGenerator::generator(P2P_RESPONSE, temp);
+        mClientSocket->send(retsult);
+
         peerInfoVec.clear();
     }
 }
