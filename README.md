@@ -39,3 +39,6 @@ p2p server &amp; client
 #### 编译
     make
     make clean
+
+#### 引用
+> 架构方面参考 https://github.com/sylar-yin/sylar
