@@ -37,6 +37,7 @@ protected:
 
 protected:
     Socket::SP  mClientSocket;
+    String8     mUUIDKey;
     UUID        mUuid;
     bool        mRefresh;   // 如果uuid不是第一次创建，则此值为true
 };

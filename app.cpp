@@ -189,7 +189,7 @@ int Application::main()
     processWorker->start();
 
     Epoll::SP epoll(new (std::nothrow)Epoll(processWorker, ioWorker));
-    UdpServer::SP udpSeerver(new (std::nothrow)UdpServer(epoll, ioWorker));
+    UdpServer::SP udpSeerver(new (std::nothrow)UdpServer(epoll, ioWorker, processWorker));
     P2PService::SP p2pService(new (std::nothrow)P2PService(epoll, processWorker, ioWorker, acceptWorker));
     LOG_ASSERT2(epoll || udpSeerver || p2pService);
     LOGI("epoll: %p; udpserver: %p; p2pservice: %p", epoll.get(), udpSeerver.get(), p2pService.get());

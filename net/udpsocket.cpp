@@ -17,9 +17,10 @@ namespace eular {
 /**
  * udpserver的作用就是为了获得客户端的对外IP和port，加以保存
  */
-UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker) :
+UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker, IOManager *processWorker) :
     Socket(SOCK_DGRAM),
-    mIOWorker(io_worker)
+    mIOWorker(io_worker),
+    mProcessWorker(processWorker)
 {
     newSock();
     LOG_ASSERT2(mSocket > 0);
@@ -35,81 +36,91 @@ UdpServer::~UdpServer()
 void UdpServer::start()
 {
     mEpoll->addEvent(shared_from_this(), std::bind(&UdpServer::onReadEvent, this), nullptr, EPOLLIN);
-    mIOWorker->addTimer(1000, std::bind(&UdpServer::onTimerEvent, this), 1500);
+    mTimerID = mProcessWorker->addTimer(1000, std::bind(&UdpServer::onTimerEvent, this), 1500);
 }
 
 void UdpServer::stop()
 {
     mEpoll->delEvent(shared_from_this(), EPOLLIN);
+    mProcessWorker->delTimer(mTimerID);
 }
 
 void UdpServer::onReadEvent()
 {
     P2S_Request req;
+    Peer_Info info;
     Address addr;
-
-    std::shared_ptr<RedisPool::RedisAPI> redis;
-    int tryTimes = 10;
-    do {
-        redis = RedisManager::get()->getRedis();
-        --tryTimes;
-    } while (redis == nullptr && tryTimes > 0); // TODO: 循环多少次合适
+    ProtocolParser parser;
+    ByteBuffer ret;
+    P2S_Response response;
+    std::shared_ptr<RedisPool::RedisAPI> redis = RedisManager::get()->getRedis();
+    response.statusCode = (uint16_t)P2PStatus::OK;
+    strcpy(response.msg, Status2String(P2PStatus::OK).c_str());
 
     while (true) {
-        int readSize = recvfrom(&req, sizeof(P2S_Request), addr, 0);
-        if (readSize < 0) {
-            if (errno != EAGAIN) {
-                LOGE("%s() reacvfrom error. [%d, %s]", __func__, errno, strerror(errno));
-            }
+        ByteBuffer buffer;
+        int readSize = Socket::recvfrom(buffer, addr);
+        if (readSize <= 0) {
             break;
         }
-        if (readSize != sizeof(P2S_Request)) {
-            LOGW("read size != sizeof(P2S_Request");
-            continue;
+        
+        if (parser.parse(buffer) == false) {
+            LOGW("%s() ProtocolParser error from [%s:%d]", __func__, addr.getIP().c_str(), addr.getPort());
+            break;
         }
 
-        LOGD("%s() request flag 0x%04x", req.flag);
-        switch (req.flag) {
+        ByteBuffer &data = parser.data();
+        LOGD("%s() udp client [%s:%d] uuid: \"%s\"", __func__,
+            addr.getIP().c_str(), addr.getPort(), req.peer_info.peer_uuid);
+        LOGD("%s() request flag 0x%04x", parser.commnd());
+        switch (parser.commnd()) {
         case P2P_REQUEST_SEND_PEER_INFO:    // 客户端想要建立udp连接，此时对端发送的应该是tcp回复的uuid
-            LOGI("%s() udp client [%s:%d] uuid: \"%s\"", __func__,
-                addr.getIP().c_str(), addr.getPort(), req.peer_info.peer_uuid);
             {
+                memcpy(&info, data.const_data(), data.size());
+                LOGD("uuid: %s", info.peer_uuid);
                 // 插入数据到client map
                 AutoLock<Mutex> lock(mMutex);
-                mUdpClientMap[req.peer_info.peer_uuid] = std::make_pair(addr, Time::Abstime());
+                mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
             }
             {
-                String8 uuid = req.peer_info.peer_uuid;
+                response.flag = P2P_RESPONSE_SEND_PEER_INFO;
+                String8 uuid = info.peer_uuid;
                 if (redis && redis->redisInterface()->isKeyExist(uuid)) { // 当键存在时
                     redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
-                    redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
-                        String8::format("%u", addr.getPort()));
+                    redis->redisInterface()->hashSetFiledValue(uuid, "udpport", String8::format("%u", addr.getPort()));
+                } else {
+                    response.statusCode = (uint16_t)P2PStatus::NO_CONTENT;
+                    strcpy(response.msg, Status2String(P2PStatus::NO_CONTENT).c_str());
                 }
+                ret = ProtocolGenerator::generator(P2P_RESPONSE_SEND_PEER_INFO, (uint8_t *)&response, P2S_Response_Size);
             }
             break;
         case P2P_REQUEST_HEARTBEAT_DETECT:
-            LOGD("%s() udp client [%s:%d] uuid: \"%s\"", __func__,
-                addr.getIP().c_str(), addr.getPort(), req.peer_info.peer_uuid);
             {
+                memcpy(&info, data.const_data(), data.size());
+                LOGD("uuid: %s", info.peer_uuid);
                 // 更新用户数据信息
                 AutoLock<Mutex> lock(mMutex);
-                const auto &it = mUdpClientMap.find(req.peer_info.peer_uuid);
+                const auto &it = mUdpClientMap.find(info.peer_uuid);
                 if (it != mUdpClientMap.end()) {
-                    mUdpClientMap[req.peer_info.peer_uuid] = std::make_pair(addr, Time::Abstime());
+                    mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
                 }
             }
             {
-                String8 uuid = req.peer_info.peer_uuid;
+                response.flag = P2P_RESPONSE_HEARTBEAT_DETECT;
+                String8 uuid = info.peer_uuid;
                 if (redis) {
                     redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
                     redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
                         String8::format("%u", addr.getPort()));
                 }
+                ret = ProtocolGenerator::generator(P2P_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
             }
             break;
         default:
             break;
         }
+        Socket::sendto(ret, addr);
     }
 }
 
