@@ -15,7 +15,7 @@ namespace eular {
 
 RedisPool::RedisPool()
 {
-    mRedisInstanceCount = Config::Lookup<uint32_t>("redis.redis_count", 4);
+    mRedisInstanceCount = Config::Lookup<uint32_t>("redis.redis_amount", 4);
     LOG_ASSERT2(mRedisInstanceCount > 0);
     mRedisHost = Config::Lookup<String8>("redis.redis_host", "127.0.0.1");
     mRedisPort = Config::Lookup<uint32_t>("redis.redis_port", 6379);
