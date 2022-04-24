@@ -28,7 +28,7 @@ p2p server &amp; client
       port: 12500
       disconnection_timeout_ms: 3000
     redis:
-      redis_count: 6
+      redis_amount: 6
       redis_host: 172.25.12.215
       redis_port: 6379
       redis_auth: 123456
