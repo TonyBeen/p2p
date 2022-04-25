@@ -156,6 +156,7 @@ void Epoll::event_loop()
             break;
         }
 
+        LOGD("Epoll::event_loop() events %d", nev);
         for (int i = 0; i < nev; ++i) {
             auto &ev = events[i];
             FDContext *ctx = static_cast<FDContext *>(ev.data.ptr);

@@ -47,7 +47,7 @@ void P2PService::handle_client(Socket::SP client)
     P2PSession::SP session(new P2PSession(client));
 
     if (mEpoll->addEvent(client, session, EPOLLIN) != true) {
-        // LOGE("%s() addEvent error. [%d, %s]", __func__, errno, strerror(errno));
+        LOGE("%s() add event to epoll failed.", __func__);
     }
 }
 

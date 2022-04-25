@@ -232,15 +232,14 @@ void IOManager::idle()
                 nextTimeout = maxTimeOut;
             }
 
-            LOGD("%s() %ld epoll_wait", __func__, Fiber::GetFiberID());
             nev = epoll_wait(mEpollFd, events, maxEvents, nextTimeout);
-            LOGD("%s() %ld epoll_wait return %d\n", __func__, Fiber::GetFiberID(), nev);
             if (nev < 0 && errno == EINTR) {
             } else {
                 break;
             }
         } while (true);
 
+        LOGD("%s() %ld event amount %d\n", __func__, Fiber::GetFiberID(), nev);
         std::vector<std::function<void()>> cbs;
         ListExpireTimer(cbs);
         if (!cbs.empty()) {
