@@ -7,6 +7,7 @@
 
 #include "p2p_service.h"
 #include "p2p_session.h"
+#include "fdmanager.h"
 #include <log/log.h>
 
 #define LOG_TAG "P2PService"
@@ -45,6 +46,7 @@ void P2PService::handle_client(Socket::SP client)
     LOGI("processing client %d %s:%u", client->socket(), addr->getIP().c_str(), addr->getPort());
 
     P2PSession::SP session(new P2PSession(client));
+    FdManager::get()->get(client->socket())->setUserNonblock(true);
 
     if (mEpoll->addEvent(client, session, EPOLLIN) != true) {
         LOGE("%s() add event to epoll failed.", __func__);
