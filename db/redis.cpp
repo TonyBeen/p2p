@@ -243,7 +243,7 @@ RedisReply::SP RedisInterface::command(const String8 &sql)
 bool RedisInterface::ping()
 {
     if (mRedisCtx == nullptr) {
-        return REDIS_STATUS_NOT_CONNECTED;
+        return false;
     }
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "ping");

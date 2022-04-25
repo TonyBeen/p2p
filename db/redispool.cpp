@@ -28,10 +28,14 @@ RedisPool::RedisPool()
     memset(mRedisInuse, 0, mRedisInstanceCount);
     for (int i = 0; i < mRedisInstanceCount; ++i) {
         RedisInterface::SP ptr(new (std::nothrow)RedisInterface(mRedisHost, mRedisPort, mPassWord.c_str()));
+        LOG_ASSERT2(ptr != nullptr);
         if (ptr->ping()) {
             LOGD("redis start");
         }
-        LOG_ASSERT2(ptr != nullptr);
+        mRedisHandle.push_back(ptr);
+    }
+    for (auto it : mRedisHandle) {
+        LOGD("%s() redis instance %p", __func__, it.get());
     }
 }
 
@@ -46,9 +50,10 @@ std::shared_ptr<RedisPool::RedisAPI> RedisPool::getRedis()
 {
     int32_t index = -1;
     {
-        RDAutoLock<RWMutex> rdlock(mRWMutex);
+        WRAutoLock<RWMutex> wlock(mRWMutex);
         for (uint32_t i = 0; i < mRedisInstanceCount; ++i) {
             if (mRedisInuse[i] != true) {
+                mRedisInuse[i] = true;
                 index = i;
                 break;
             }
@@ -58,13 +63,13 @@ std::shared_ptr<RedisPool::RedisAPI> RedisPool::getRedis()
     std::shared_ptr<RedisPool::RedisAPI> ptr;
     if (index >= 0 && index < mRedisInstanceCount) {
         {
-            WRAutoLock<RWMutex> wrlock(mRWMutex);
+            RDAutoLock<RWMutex> rlock(mRWMutex);
             RedisPool::RedisAPI *api = new RedisPool::RedisAPI(index, mRedisHandle[index].get(), this);
             ptr.reset(api);
         }
         if (ptr->redisInterface()->ping() == false) {   // 测试连接失败
             if (ptr->redisInterface()->reconnect() == false) {  // 重连redis失败
-                RDAutoLock<RWMutex> rdlock(mRWMutex);
+                WRAutoLock<RWMutex> wlock(mRWMutex);
                 mRedisInuse[index] = false;
                 return nullptr;
             }

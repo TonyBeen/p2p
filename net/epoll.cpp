@@ -65,7 +65,7 @@ bool Epoll::addEvent(Socket::SP clientSock, Session::SP session, uint32_t event)
         ev.events = EPOLLET | event;
         FDContext::SP ctx;
         if (mContextVec[fd] == nullptr) {
-            ctx.reset(new (std::nothrow)FDContext(session));
+            ctx.reset(new (std::nothrow)FDContext(session, fd, event));
             if (ctx == nullptr) {
                 return false;
             }
@@ -80,6 +80,7 @@ bool Epoll::addEvent(Socket::SP clientSock, Session::SP session, uint32_t event)
         vectorResize(fd);
         mClientVec[fd].swap(clientSock);
         mContextVec[fd] = ctx;
+        LOGD("%s() client %d successed add event to epoll", __func__, mClientVec[fd]->socket());
         return true;
     }
 
@@ -150,7 +151,7 @@ void Epoll::event_loop()
     LOG_ASSERT2(events != nullptr);
 
     while (!mShouldStop) {
-        int nev = epoll_wait(mEpollFd, events, mEventSize, 1000);
+        int nev = epoll_wait(mEpollFd, events, mEventSize, -1);
         if (nev < 0) {
             LOGE("%s() epoll_wait error. [%d,%s]", __func__, errno, strerror(errno));
             break;

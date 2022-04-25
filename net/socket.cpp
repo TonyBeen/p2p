@@ -18,6 +18,8 @@ namespace eular {
 
 Socket::Socket(int type) :
     mSocket(INVALID_SOCKET),
+    mLocalAddr(nullptr),
+    mRemoteAddr(nullptr),
     mType(type),
     mFamily(AF_INET),
     mIsConnected(false)
@@ -308,10 +310,10 @@ int Socket::recvfrom(ByteBuffer &buffer, Address &from, int flag)
 
 Address::SP Socket::getLocalAddr()
 {
-    if (mLocalAddr) {
+    if (mLocalAddr != nullptr) {
         return mLocalAddr;
     }
-    
+
     if (valid()) {
         sockaddr_in addr;
         socklen_t len = sizeof(sockaddr_in);
@@ -327,7 +329,7 @@ Address::SP Socket::getLocalAddr()
 
 Address::SP Socket::getRemoteAddr()
 {
-    if (mRemoteAddr) {
+    if (mRemoteAddr != nullptr) {
         return mRemoteAddr;
     }
     

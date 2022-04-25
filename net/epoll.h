@@ -52,7 +52,7 @@ private:
         FDContext() : fd(-1), event(0) {}
         FDContext(int f, uint32_t ev, std::function<void(int)> cbRead, std::function<void(int)> cbWrite = nullptr) :
             fd(f), event(ev), callbackOfRead(cbRead), callbackOfWrite(cbWrite) {}
-        FDContext(Session::SP s) : session(s) {}
+        FDContext(Session::SP s, int f, uint32_t ev) : session(s), fd(f), event(ev) {}
         ~FDContext()
         {
             reset();
