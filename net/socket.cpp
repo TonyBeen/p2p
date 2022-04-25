@@ -22,7 +22,7 @@ Socket::Socket(int type) :
     mFamily(AF_INET),
     mIsConnected(false)
 {
-    LOGD("%s(%d)", __func__, type);
+    LOGD("%s(%s)", __func__, type == SOCK_STREAM ? "SOCK_STREAM" : "SOCK_DGRAM");
 }
 
 Socket::~Socket()
