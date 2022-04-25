@@ -232,7 +232,7 @@ int Socket::recv(ByteBuffer &buffer, int flag)
         int sum = 0;
         uint8_t buf[512] = {0};
         while (true) {
-            int size = recv(buf, sizeof(buf), flag);
+            int size = ::recv(mSocket, buf, sizeof(buf), flag);
             if (size <= 0) {
                 if (errno != EAGAIN) {
                     LOGE("Socket::recv(ByteBuffer &buffer, int flag) error. [%d,%s]", errno, strerror(errno));

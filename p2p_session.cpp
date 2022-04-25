@@ -28,6 +28,7 @@ P2PSession::~P2PSession()
 
 void P2PSession::onReadEvent(int fd)
 {
+    LOGD("%s(%d)", __func__, fd);
     P2S_Request req;
     P2S_Response response;
     ByteBuffer buffer;
@@ -43,6 +44,7 @@ void P2PSession::onReadEvent(int fd)
         strcpy(response.msg, Status2String(P2PStatus::OK).c_str());
 
         int recvSize = mClientSocket->recv(buffer);
+        LOGD("%s() %d recv size %d", __func__, fd, recvSize);
         if (recvSize <= 0) {
             if (errno != EAGAIN) {
                 LOGE("%s() recv error. [%d, %s]", __func__, errno, strerror(errno));
@@ -50,7 +52,6 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
-        LOGD("%s() %d recv size %d", __func__, fd, recvSize);
         // FIXME: 当多个数据包到达时ProtocolParser只能解析出一个，之后的无法解析出
         if (parser.parse(buffer) == false) {
             break;
