@@ -178,7 +178,7 @@ eular::ByteBuffer ProtocolGenerator::generator(uint16_t cmd, const uint8_t *data
     temp = encode32u(temp, 0);
     temp = encode32u(temp, (data ? len : 0));
     memcpy(temp, data, len);
-    buffer.set(temp, P2P_HEADER_SIZE + len);
+    buffer.set(buf, P2P_HEADER_SIZE + len);
 
 ret:
     if (buf) {

@@ -52,18 +52,24 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
+        String8 log;
+        for (int i = 0; i < buffer.size(); ++i) {
+            if (i % 16 == 0) {
+                log.appendFormat("\n\t");
+            }
+            log.appendFormat("0x%02x ", buffer[i]);
+        }
+        LOGD("%s() recv: %s", __func__, log.c_str());
+
         // FIXME: 当多个数据包到达时ProtocolParser只能解析出一个，之后的无法解析出
         if (parser.parse(buffer) == false) {
             break;
         }
 
         ByteBuffer &data = parser.data();
-        if (data.size() != P2S_Request_Size) {
-            LOGW("recv an invalid request. buffer size %zu", data.size());
-        }
 
         const Address::SP &addr = mClientSocket->getRemoteAddr();
-        LOGD("%s() client %d [%s:%u] send request 0x%04x", __func__, fd, addr->getIP().c_str(), addr->getPort(), req.flag);
+        LOGD("%s() client %d [%s:%u] send request 0x%04x", __func__, fd, addr->getIP().c_str(), addr->getPort(), parser.commnd());
         switch (parser.commnd()) {
         case P2P_REQUEST_SEND_PEER_INFO:    // 客户端发送本机信息
             {
@@ -140,7 +146,7 @@ void P2PSession::onReadEvent(int fd)
             }
             break;
         default:
-            LOGW("unknow flag 0x%04x", req.flag);
+            LOGW("unknow flag 0x%04x", parser.commnd());
             break;
         }
 
@@ -149,6 +155,14 @@ void P2PSession::onReadEvent(int fd)
         mClientSocket->send(&response, sizeof(P2S_Response));
         temp.append((uint8_t *)&peerInfoVec[0], sizeof(Peer_Info) * peerInfoVec.size());
         ByteBuffer retsult = ProtocolGenerator::generator(P2P_RESPONSE, temp);
+        log.clear();
+        for (int i = 0; i < retsult.size(); ++i) {
+            if (i % 16 == 0) {
+                log.appendFormat("\n\t");
+            }
+            log.appendFormat("0x%02x ", retsult[i]);
+        }
+        LOGD("%s() recv: %s", __func__, log.c_str());
         mClientSocket->send(retsult);
 
         peerInfoVec.clear();
