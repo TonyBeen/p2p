@@ -80,7 +80,7 @@ bool Epoll::addEvent(Socket::SP clientSock, Session::SP session, uint32_t event)
         vectorResize(fd);
         mClientVec[fd].swap(clientSock);
         mContextVec[fd] = ctx;
-        LOGD("%s() client %d successed add event to epoll", __func__, mClientVec[fd]->socket());
+        LOGD("%s() client %d successed add event to epoll %d", __func__, mClientVec[fd]->socket(), mEpollFd);
         return true;
     }
 

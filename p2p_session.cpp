@@ -50,6 +50,7 @@ void P2PSession::onReadEvent(int fd)
             break;
         }
 
+        LOGD("%s() %d recv size %d", __func__, fd, recvSize);
         // FIXME: 当多个数据包到达时ProtocolParser只能解析出一个，之后的无法解析出
         if (parser.parse(buffer) == false) {
             break;

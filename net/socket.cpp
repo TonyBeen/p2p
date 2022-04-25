@@ -235,7 +235,7 @@ int Socket::recv(ByteBuffer &buffer, int flag)
             int size = recv(buf, sizeof(buf), flag);
             if (size <= 0) {
                 if (errno != EAGAIN) {
-                    LOGE("recvfrom error. [%d,%s]", errno, strerror(errno));
+                    LOGE("Socket::recv(ByteBuffer &buffer, int flag) error. [%d,%s]", errno, strerror(errno));
                 }
                 break;
             }
@@ -265,7 +265,7 @@ int Socket::recvfrom(void *buf, size_t len, Address &from, int flag)
 
 int Socket::recvfrom(iovec *buffer, size_t len, Address &from, int flag)
 {
-    if(mIsConnected) {
+    if (mIsConnected) {
         sockaddr_in addr;
         msghdr msg;
         memset(&msg, 0, sizeof(msg));
