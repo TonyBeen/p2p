@@ -167,7 +167,8 @@ void Epoll::event_loop()
             if (ev.events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
                 Socket::SP &it = mClientVec[ctx->fd];
                 Address::SP addr = it->getRemoteAddr();
-                LOGI("%s() client %s:%d quit.", __func__, addr->getIP().c_str(), addr->getPort());
+                LOGI("%s() client(%d) %s:%d quit.", __func__, ctx->fd, addr->getIP().c_str(), addr->getPort());
+                ctx->shutdown();
                 removeFromEpoll(ctx->fd);
                 resetFromContextVec(ctx->fd);
                 continue;

@@ -86,6 +86,13 @@ private:
                 }
             }
         }
+
+        void shutdown()
+        {
+            if (session != nullptr) {
+                session->onShutdown();
+            }
+        }
     };
     
 
