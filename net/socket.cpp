@@ -25,6 +25,9 @@ Socket::Socket(int type) :
     mIsConnected(false)
 {
     LOGD("%s(%s)", __func__, type == SOCK_STREAM ? "SOCK_STREAM" : "SOCK_DGRAM");
+    if (type == SOCK_DGRAM) {
+        mIsConnected = true;
+    }
 }
 
 Socket::~Socket()
