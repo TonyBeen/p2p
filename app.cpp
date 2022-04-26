@@ -189,15 +189,16 @@ int Application::main()
     processWorker->start();
 
     Epoll::SP epoll(new (std::nothrow)Epoll(processWorker, ioWorker));
-    UdpServer::SP udpSeerver(new (std::nothrow)UdpServer(epoll, ioWorker, processWorker));
+    UdpServer::SP udpServer(new (std::nothrow)UdpServer(epoll, ioWorker, processWorker));
     P2PService::SP p2pService(new (std::nothrow)P2PService(epoll, processWorker, ioWorker, acceptWorker));
-    LOG_ASSERT2(epoll || udpSeerver || p2pService);
-    LOGI("epoll: %p; udpserver: %p; p2pservice: %p", epoll.get(), udpSeerver.get(), p2pService.get());
+    LOG_ASSERT2(epoll || udpServer || p2pService);
+    LOGI("epoll: %p; udpserver: %p; p2pservice: %p", epoll.get(), udpServer.get(), p2pService.get());
     p2pService->bind(Address(tcphost, tcpport));
+    udpServer->bind(Address(udphost, udpport));
     p2pService->listen();
     epoll->start();
     p2pService->start();
-    udpSeerver->start();
+    udpServer->start();
 
     IOManager::GetMainFiber()->resume();
     LOGI("main exit");
