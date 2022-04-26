@@ -23,8 +23,8 @@ UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker, IOManager *processWo
     mProcessWorker(processWorker)
 {
     newSock();
-    String8 host = Config::Lookup<String8>(udp.host, "172.25.12.215");
-    uint16_t port = Config::Lookup<uint16_t>(udp.port, 12500);
+    String8 host = Config::Lookup<String8>("udp.host", "172.25.12.215");
+    uint16_t port = Config::Lookup<uint16_t>("udp.port", 12500);
     mBindAddr = Address(host, port);
     bind(mBindAddr);
 
