@@ -95,7 +95,7 @@ void UdpServer::onReadEvent()
                 LOGD("uuid: %s", info.peer_uuid);
                 // 插入数据到client map
                 AutoLock<Mutex> lock(mMutex);
-                mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
+                mUdpClientMap[info.peer_uuid] = Time::Abstime();
             }
             {
                 response.flag = P2P_RESPONSE_SEND_PEER_INFO;
@@ -112,30 +112,41 @@ void UdpServer::onReadEvent()
             break;
         case P2P_REQUEST_HEARTBEAT_DETECT:
             {
-                memcpy(&info, data.const_data(), data.size());
-                LOGD("uuid: %s", info.peer_uuid);
-                // 更新用户数据信息
-                AutoLock<Mutex> lock(mMutex);
-                const auto &it = mUdpClientMap.find(info.peer_uuid);
-                if (it != mUdpClientMap.end()) {
-                    mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
+                bool shouldResponse = false;
+                {
+                    memcpy(&info, data.const_data(), data.size());
+                    LOGD("uuid: %s", info.peer_uuid);
+                    
+                    if (redis) {    // 先从redis检查key是否还存在
+                        if (redis->redisInterface()->isKeyExist(info.peer_uuid) == false) {
+                            mUdpClientMap.erase(info.peer_uuid);
+                        }
+                    }
+                    // 更新用户数据信息
+                    AutoLock<Mutex> lock(mMutex);
+                    const auto &it = mUdpClientMap.find(info.peer_uuid);
+                    if (it != mUdpClientMap.end()) {
+                        mUdpClientMap[info.peer_uuid] = Time::Abstime();
+                        shouldResponse = true;
+                    }
                 }
-            }
-            {
-                response.flag = P2P_RESPONSE_HEARTBEAT_DETECT;
-                String8 uuid = info.peer_uuid;
-                if (redis) {
-                    redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
-                    redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
-                        String8::format("%u", addr.getPort()));
+                if (shouldResponse) {
+                    response.flag = P2P_RESPONSE_HEARTBEAT_DETECT;
+                    String8 uuid = info.peer_uuid;
+                    if (redis) {
+                        redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
+                        redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
+                            String8::format("%u", addr.getPort()));
+                    }
+                    ret = ProtocolGenerator::generator(P2P_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
                 }
-                ret = ProtocolGenerator::generator(P2P_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
             }
             break;
         default:
             break;
         }
         Socket::sendto(ret, addr);
+        ret.clear();
     }
 }
 
@@ -144,8 +155,7 @@ void UdpServer::onTimerEvent()
     AutoLock<Mutex> lock(mMutex);
     uint64_t currentTimeMS = Time::Abstime();
     for (auto it = mUdpClientMap.begin(); it != mUdpClientMap.end(); ++it) {
-        if (it->second.second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
-            mUdpClientMap.erase(it++);
+        if (it->second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
             auto redis = RedisManager::get()->getRedis();
             if (redis) {
                 static const char *fields[] = { "udphost", "udpport" };
@@ -153,6 +163,7 @@ void UdpServer::onTimerEvent()
             } else {
                 LOGW("getRedis return null. uuid: \'%s\' is not remove", it->first.c_str());
             }
+            mUdpClientMap.erase(it++);
         }
     }
 }
