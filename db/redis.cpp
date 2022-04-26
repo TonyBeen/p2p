@@ -456,6 +456,7 @@ bool RedisInterface::delKey(const String8 &key)
         return false;
     }
 
+    LOGD("%s() query sql: [del %s]\n", __func__, key.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "del %s", key.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
         goto error;
