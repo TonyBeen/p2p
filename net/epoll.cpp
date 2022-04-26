@@ -116,6 +116,7 @@ bool Epoll::addEvent(Socket::SP clientSock, std::function<void(int)> readCB,
         vectorResize(fd);
         mClientVec[fd].swap(clientSock);
         mContextVec[fd] = ctx;
+        LOGD("%s() client %d successed add event to epoll %d", __func__, mClientVec[fd]->socket(), mEpollFd);
         return true;
     }
 
