@@ -23,7 +23,13 @@ UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker, IOManager *processWo
     mProcessWorker(processWorker)
 {
     newSock();
+    String8 host = Config::Lookup<String8>(udp.host, "172.25.12.215");
+    uint16_t port = Config::Lookup<uint16_t>(udp.port, 12500);
+    mBindAddr = Address(host, port);
+    bind(mBindAddr);
+
     LOG_ASSERT2(mSocket > 0);
+    LOGD("udp socket %d", mSocket);
     mDisconnectionTimeoutMS = Config::Lookup<uint32_t>("udp.disconnection_timeout_ms", 3000);
     mEpoll = epoll;
 }
@@ -35,8 +41,9 @@ UdpServer::~UdpServer()
 
 void UdpServer::start()
 {
-    mEpoll->addEvent(shared_from_this(), std::bind(&UdpServer::onReadEvent, this), nullptr, EPOLLIN);
+    LOG_ASSERT2(mEpoll->addEvent(shared_from_this(), std::bind(&UdpServer::onReadEvent, this), nullptr, EPOLLIN));
     mTimerID = mProcessWorker->addTimer(1000, std::bind(&UdpServer::onTimerEvent, this), 1500);
+    LOG_ASSERT2(mTimerID > 0);
 }
 
 void UdpServer::stop()
@@ -47,6 +54,7 @@ void UdpServer::stop()
 
 void UdpServer::onReadEvent()
 {
+    LOGD("UdpServer::onReadEvent()");
     P2S_Request req;
     Peer_Info info;
     Address addr;
@@ -60,9 +68,19 @@ void UdpServer::onReadEvent()
     while (true) {
         ByteBuffer buffer;
         int readSize = Socket::recvfrom(buffer, addr);
+        LOGD("UdpServer::onReadEvent() recv size %d", readSize);
         if (readSize <= 0) {
             break;
         }
+
+        String8 log;
+        for (int i = 0; i < buffer.size(); ++i) {
+            if (i % 16 == 0) {
+                log.appendFormat("\n\t");
+            }
+            log.appendFormat("0x%02x ", buffer[i]);
+        }
+        LOGD("%s() recv: %s", __func__, log.c_str());
         
         if (parser.parse(buffer) == false) {
             LOGW("%s() ProtocolParser error from [%s:%d]", __func__, addr.getIP().c_str(), addr.getPort());
