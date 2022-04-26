@@ -7,6 +7,7 @@
 
 #include "udpsocket.h"
 #include "config.h"
+#include "fdmanager.h"
 #include "db/redispool.h"
 #include "protocol/protocol.h"
 #include <log/log.h>
@@ -28,6 +29,7 @@ UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker, IOManager *processWo
     LOGD("udp socket %d", mSocket);
     mDisconnectionTimeoutMS = Config::Lookup<uint32_t>("udp.disconnection_timeout_ms", 3000);
     mEpoll = epoll;
+    FdManager::get()->get(mSocket, true)->setUserNonblock(true);
 }
 
 UdpServer::~UdpServer()
@@ -84,9 +86,8 @@ void UdpServer::onReadEvent()
         }
 
         ByteBuffer &data = parser.data();
-        LOGD("%s() udp client [%s:%d] uuid: \"%s\"", __func__,
-            addr.getIP().c_str(), addr.getPort(), req.peer_info.peer_uuid);
-        LOGD("%s() request flag 0x%04x", parser.commnd());
+        LOGD("%s() udp client [%s:%d] request flag 0x%04x", __func__,
+            addr.getIP().c_str(), addr.getPort(), parser.commnd());
         switch (parser.commnd()) {
         case P2P_REQUEST_SEND_PEER_INFO:    // 客户端想要建立udp连接，此时对端发送的应该是tcp回复的uuid
             {

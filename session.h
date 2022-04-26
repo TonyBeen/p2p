@@ -22,6 +22,7 @@ public:
 
     virtual void onReadEvent(int fd) = 0;
     virtual void onWritEvent(int fd) = 0;
+    virtual void onShutdown() = 0;
 
 };
 

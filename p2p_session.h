@@ -29,6 +29,7 @@ public:
 
     virtual void onReadEvent(int fd) override;
     virtual void onWritEvent(int fd) override;
+    virtual void onShutdown() override;
 
 protected:
     void onRequestSendPeerInfo(const P2S_Request &req);

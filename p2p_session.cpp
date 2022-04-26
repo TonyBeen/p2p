@@ -79,15 +79,15 @@ void P2PSession::onReadEvent(int fd)
                 response.flag = P2P_RESPONSE_SEND_PEER_INFO;
                 String8 name = info.peer_name;
                 mUUIDKey = String8::format("%s+%s", name.c_str(), addr->getIP().c_str());
-                name.appendFormat("+%s", addr->getIP().c_str());
                 if (mRefresh && redis != nullptr) {
                     redis->redisInterface()->delKey(mUuid.uuid());
                 }
-                mUuid.init(name);
+                mUuid.init(mUUIDKey);
                 mRefresh = true;
-                LOGD("client %d uuid: %s", fd, mUuid.uuid().c_str());
+                LOGD("client %d name %s key %s uuid: %s", fd, name.c_str(), mUUIDKey.c_str(), mUuid.uuid().c_str());
                 std::vector<std::pair<String8, String8>> fields;
                 fields.push_back(std::make_pair("name", name));
+                fields.push_back(std::make_pair("uidkey", mUUIDKey));
                 fields.push_back(std::make_pair("tcphost", addr->getIP()));
                 fields.push_back(std::make_pair("tcpport", String8::format("%u", addr->getPort())));
 
@@ -104,6 +104,10 @@ void P2PSession::onReadEvent(int fd)
             break;
         case P2P_REQUEST_GET_PEER_INFO:
             {
+                Peer_Info info;
+                memcpy(&info, data.const_data(), data.size());
+                LOG_ASSERT2(mUuid.uuid() == info.peer_uuid);
+
                 response.flag = P2P_RESPONSE_GET_PEER_INFO;
                 std::vector<String8> uuidVec;
                 if (redis && redis->redisInterface()->getAllKeys(uuidVec)) { // 获取数据所有的键，数据库存错的键的类型都是哈希键
@@ -171,6 +175,15 @@ void P2PSession::onReadEvent(int fd)
 void P2PSession::onWritEvent(int fd)
 {
     LOGD("%s()", __func__);
+}
+
+void P2PSession::onShutdown()
+{
+    // 将uuid从redis移除
+    std::shared_ptr<RedisPool::RedisAPI> redis = RedisManager::get()->getRedis();
+    if (redis) {
+        redis->redisInterface()->delKey(mUuid.uuid());
+    }
 }
 
 void P2PSession::onRequestSendPeerInfo(const P2S_Request &req)
