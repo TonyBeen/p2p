@@ -152,7 +152,6 @@ void P2PSession::onReadEvent(int fd)
 
         ByteBuffer temp;
         temp.append((uint8_t *)&response, sizeof(P2S_Response));
-        mClientSocket->send(&response, sizeof(P2S_Response));
         temp.append((uint8_t *)&peerInfoVec[0], sizeof(Peer_Info) * peerInfoVec.size());
         ByteBuffer retsult = ProtocolGenerator::generator(P2P_RESPONSE, temp);
         log.clear();
@@ -162,7 +161,7 @@ void P2PSession::onReadEvent(int fd)
             }
             log.appendFormat("0x%02x ", retsult[i]);
         }
-        LOGD("%s() recv: %s", __func__, log.c_str());
+        LOGD("%s() send(%d): %s", __func__, retsult.size(), log.c_str());
         mClientSocket->send(retsult);
 
         peerInfoVec.clear();
