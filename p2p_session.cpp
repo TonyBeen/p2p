@@ -104,9 +104,9 @@ void P2PSession::onReadEvent(int fd)
             break;
         case P2P_REQUEST_GET_PEER_INFO:
             {
-                Peer_Info info;
-                memcpy(&info, data.const_data(), data.size());
-                LOG_ASSERT2(mUuid.uuid() == info.peer_uuid);
+                Peer_Info peerInfo;
+                memcpy(&peerInfo, data.const_data(), data.size());
+                LOG_ASSERT2(mUuid.uuid() == peerInfo.peer_uuid);
 
                 response.flag = P2P_RESPONSE_GET_PEER_INFO;
                 std::vector<String8> uuidVec;
