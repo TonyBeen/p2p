@@ -169,7 +169,7 @@ eular::ByteBuffer ProtocolGenerator::generator(uint16_t cmd, const uint8_t *data
     uint8_t *temp;
     uint8_t *buf = (uint8_t *)malloc(P2P_HEADER_SIZE + len + 1);
     if (buf == nullptr) {
-        goto ret;
+        return buffer;
     }
     temp = buf;
     temp = encode32u(temp, SPECIAL_IDENTIFIER);
@@ -180,10 +180,7 @@ eular::ByteBuffer ProtocolGenerator::generator(uint16_t cmd, const uint8_t *data
     memcpy(temp, data, len);
     buffer.set(buf, P2P_HEADER_SIZE + len);
 
-ret:
-    if (buf) {
-        free(buf);
-    }
+    free(buf);
     return buffer;
 }
 

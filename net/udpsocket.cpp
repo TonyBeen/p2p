@@ -30,6 +30,8 @@ UdpServer::UdpServer(Epoll::SP epoll, IOManager *io_worker, IOManager *processWo
     mDisconnectionTimeoutMS = Config::Lookup<uint32_t>("udp.disconnection_timeout_ms", 3000);
     mEpoll = epoll;
     FdManager::get()->get(mSocket, true)->setUserNonblock(true);
+
+    mMutex.setMutexName("udpserver");
 }
 
 UdpServer::~UdpServer()
@@ -116,7 +118,7 @@ void UdpServer::onReadEvent()
                 {
                     memcpy(&info, data.const_data(), data.size());
                     LOGD("uuid: %s", info.peer_uuid);
-                    
+
                     if (redis) {    // 先从redis检查key是否还存在
                         if (redis->redisInterface()->isKeyExist(info.peer_uuid) == false) {
                             mUdpClientMap.erase(info.peer_uuid);
@@ -145,6 +147,16 @@ void UdpServer::onReadEvent()
         default:
             break;
         }
+
+        LOGD("%s() send buf size = %zu", __func__, ret.size());
+        log.clear();
+        for (int i = 0; i < ret.size(); ++i) {
+            if (i % 16 == 0) {
+                log.appendFormat("\n\t");
+            }
+            log.appendFormat("0x%02x ", ret[i]);
+        }
+        LOGD("%s() send: %s", __func__, log.c_str());
         Socket::sendto(ret, addr);
         ret.clear();
     }
@@ -152,19 +164,23 @@ void UdpServer::onReadEvent()
 
 void UdpServer::onTimerEvent()
 {
+    LOGD("%s()", __func__);
     AutoLock<Mutex> lock(mMutex);
     uint64_t currentTimeMS = Time::Abstime();
-    for (auto it = mUdpClientMap.begin(); it != mUdpClientMap.end(); ++it) {
+    for (auto it = mUdpClientMap.begin(); it != mUdpClientMap.end();) {
+        LOGD("%s() for(;;)", __func__);
         if (it->second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
             auto redis = RedisManager::get()->getRedis();
-            if (redis) {
+            if (redis && redis->redisInterface()->isKeyExist(it->first)) {
                 static const char *fields[] = { "udphost", "udpport" };
                 redis->redisInterface()->hashDelFileds(it->first, fields, 2);
             } else {
-                LOGW("getRedis return null. uuid: \'%s\' is not remove", it->first.c_str());
+                LOGW("getRedis return null or uuid: \'%s\' is not exist!", it->first.c_str());
             }
             mUdpClientMap.erase(it++);
+            continue;
         }
+        ++it;
     }
 }
 
