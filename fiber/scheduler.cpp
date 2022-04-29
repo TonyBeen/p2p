@@ -165,7 +165,7 @@ void Scheduler::run()
                     continue;
                 }
 
-                LOGD("Find executable tasks");
+                // LOGD("Find executable tasks");
                 ft = *it;
                 mFiberQueue.erase(it++);
                 ++mActiveThreadCount;

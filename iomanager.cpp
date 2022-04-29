@@ -239,7 +239,7 @@ void IOManager::idle()
             }
         } while (true);
 
-        LOGD("%s() %ld event amount %d\n", __func__, Fiber::GetFiberID(), nev);
+        // LOGD("%s() %ld event amount %d\n", __func__, Fiber::GetFiberID(), nev);
         std::vector<std::function<void()>> cbs;
         ListExpireTimer(cbs);
         if (!cbs.empty()) {

@@ -69,6 +69,10 @@ bool Epoll::addEvent(Socket::SP clientSock, Session::SP session, uint32_t event)
             if (ctx == nullptr) {
                 return false;
             }
+        } else {
+            ctx->session = session;
+            ctx->fd = fd;
+            ctx->event = event;
         }
 
         ev.data.ptr = ctx.get();
