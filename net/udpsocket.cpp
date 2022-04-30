@@ -164,11 +164,9 @@ void UdpServer::onReadEvent()
 
 void UdpServer::onTimerEvent()
 {
-    LOGD("%s()", __func__);
     AutoLock<Mutex> lock(mMutex);
     uint64_t currentTimeMS = Time::Abstime();
     for (auto it = mUdpClientMap.begin(); it != mUdpClientMap.end();) {
-        LOGD("%s() for(;;)", __func__);
         if (it->second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
             auto redis = RedisManager::get()->getRedis();
             if (redis && redis->redisInterface()->isKeyExist(it->first)) {
