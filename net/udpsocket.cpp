@@ -130,6 +130,9 @@ void UdpServer::onReadEvent()
                     if (it != mUdpClientMap.end()) {
                         mUdpClientMap[info.peer_uuid] = Time::Abstime();
                         shouldResponse = true;
+                    } else {
+                        response.statusCode = (uint16_t)P2PStatus::NO_CONTENT;
+                        strcpy(response.msg, Status2String(P2PStatus::NO_CONTENT).c_str());
                     }
                 }
                 if (shouldResponse) {
