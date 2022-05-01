@@ -18,18 +18,18 @@
 #define SPECIAL_IDENTIFIER 0x55647382
 #define P2P_HEADER_SIZE 16
 
-#define P2P_REQUEST                     0x0100
-#define P2P_REQUEST_SEND_PEER_INFO      (P2P_REQUEST + 1)   // 发送本机信息
-#define P2P_REQUEST_GET_PEER_INFO       (P2P_REQUEST + 2)   // 获取所有的主机信息
-#define P2P_REQUEST_CONNECT_TO_PEER     (P2P_REQUEST + 3)   // 连接某一主机
-#define P2P_REQUEST_HEARTBEAT_DETECT    (P2P_REQUEST + 4)   // 客户端响应心跳检测
+#define P2S_REQUEST                     0x0100
+#define P2S_REQUEST_SEND_PEER_INFO      (P2S_REQUEST + 1)   // 发送本机信息
+#define P2S_REQUEST_GET_PEER_INFO       (P2S_REQUEST + 2)   // 获取所有的主机信息
+#define P2S_REQUEST_CONNECT_TO_PEER     (P2S_REQUEST + 3)   // 连接某一主机
+#define P2S_REQUEST_HEARTBEAT_DETECT    (P2S_REQUEST + 4)   // 客户端响应心跳检测
 
-#define P2P_RESPONSE                    0x1000
-#define P2P_RESPONSE_SEND_PEER_INFO     (P2P_RESPONSE + 1)  // 服务端响应客户端发送的信息
-#define P2P_RESPONSE_GET_PEER_INFO      (P2P_RESPONSE + 2)  // 服务端响应获取客户端信息
-#define P2P_RESPONSE_CONNECT_TO_PEER    (P2P_RESPONSE + 3)  // 服务端响应客户端请求连接
-#define P2P_RESPONSE_CONNECT_TO_ME      (P2P_RESPONSE + 4)  // 服务器响应对端有人要建立连接
-#define P2P_RESPONSE_HEARTBEAT_DETECT   (P2P_RESPONSE + 5)  // 服务端用于udp的心跳检测包(由服务端主动发起)
+#define P2S_RESPONSE                    0x1000
+#define P2S_RESPONSE_SEND_PEER_INFO     (P2S_RESPONSE + 1)  // 服务端响应客户端发送的信息
+#define P2S_RESPONSE_GET_PEER_INFO      (P2S_RESPONSE + 2)  // 服务端响应获取客户端信息
+#define P2S_RESPONSE_CONNECT_TO_PEER    (P2S_RESPONSE + 3)  // 服务端响应客户端请求连接
+#define P2S_RESPONSE_CONNECT_TO_ME      (P2S_RESPONSE + 4)  // 服务器响应对端有人要建立连接
+#define P2S_RESPONSE_HEARTBEAT_DETECT   (P2S_RESPONSE + 5)  // 服务端用于udp的心跳检测包(由服务端主动发起)
 
 #define UUID_SIZE       48
 #define PEER_NAME_SIZE  32

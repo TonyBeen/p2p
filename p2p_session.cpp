@@ -71,12 +71,12 @@ void P2PSession::onReadEvent(int fd)
         const Address::SP &addr = mClientSocket->getRemoteAddr();
         LOGD("%s() client %d [%s:%u] send request 0x%04x", __func__, fd, addr->getIP().c_str(), addr->getPort(), parser.commnd());
         switch (parser.commnd()) {
-        case P2P_REQUEST_SEND_PEER_INFO:    // 客户端发送本机信息
+        case P2S_REQUEST_SEND_PEER_INFO:    // 客户端发送本机信息
             {
                 // 本条命令接待的数据应该是Peer_Info
                 Peer_Info info;
                 memcpy(&info, data.const_data(), data.size());
-                response.flag = P2P_RESPONSE_SEND_PEER_INFO;
+                response.flag = P2S_RESPONSE_SEND_PEER_INFO;
                 String8 name = info.peer_name;
                 mUUIDKey = String8::format("%s+%s", name.c_str(), addr->getIP().c_str());
                 if (mRefresh && redis != nullptr) {
@@ -102,13 +102,13 @@ void P2PSession::onReadEvent(int fd)
                 peerInfoVec.push_back(info);
             }
             break;
-        case P2P_REQUEST_GET_PEER_INFO:
+        case P2S_REQUEST_GET_PEER_INFO:
             {
                 Peer_Info peerInfo;
                 memcpy(&peerInfo, data.const_data(), data.size());
                 LOG_ASSERT2(mUuid.uuid() == peerInfo.peer_uuid);
 
-                response.flag = P2P_RESPONSE_GET_PEER_INFO;
+                response.flag = P2S_RESPONSE_GET_PEER_INFO;
                 std::vector<String8> uuidVec;
                 if (redis && redis->redisInterface()->getAllKeys(uuidVec)) { // 获取数据所有的键，数据库存错的键的类型都是哈希键
                     response.statusCode = (uint16_t)P2PStatus::REDIS_SERVER_ERROR;
@@ -141,11 +141,11 @@ void P2PSession::onReadEvent(int fd)
                 response.number = peerInfoVec.size();
             }
             break;
-        case P2P_REQUEST_CONNECT_TO_PEER:
+        case P2S_REQUEST_CONNECT_TO_PEER:
             {
                 // TODO: 将对端想要连接的uuid相关信息从redis拿出来，并告知此客户端有人想要与其建立连接
                 // 通过拿到的udp信息告知其有客户端想要连接
-                response.flag = P2P_RESPONSE_CONNECT_TO_PEER;
+                response.flag = P2S_RESPONSE_CONNECT_TO_PEER;
                 response.number = 0;
             }
             break;
@@ -157,7 +157,7 @@ void P2PSession::onReadEvent(int fd)
         ByteBuffer temp;
         temp.append((uint8_t *)&response, sizeof(P2S_Response));
         temp.append((uint8_t *)&peerInfoVec[0], sizeof(Peer_Info) * peerInfoVec.size());
-        ByteBuffer retsult = ProtocolGenerator::generator(P2P_RESPONSE, temp);
+        ByteBuffer retsult = ProtocolGenerator::generator(P2S_RESPONSE, temp);
         log.clear();
         for (int i = 0; i < retsult.size(); ++i) {
             if (i % 16 == 0) {

@@ -91,7 +91,7 @@ void UdpServer::onReadEvent()
         LOGD("%s() udp client [%s:%d] request flag 0x%04x", __func__,
             addr.getIP().c_str(), addr.getPort(), parser.commnd());
         switch (parser.commnd()) {
-        case P2P_REQUEST_SEND_PEER_INFO:    // 客户端想要建立udp连接，此时对端发送的应该是tcp回复的uuid
+        case P2S_REQUEST_SEND_PEER_INFO:    // 客户端想要建立udp连接，此时对端发送的应该是tcp回复的uuid
             {
                 memcpy(&info, data.const_data(), data.size());
                 LOGD("uuid: %s", info.peer_uuid);
@@ -100,7 +100,7 @@ void UdpServer::onReadEvent()
                 mUdpClientMap[info.peer_uuid] = Time::Abstime();
             }
             {
-                response.flag = P2P_RESPONSE_SEND_PEER_INFO;
+                response.flag = P2S_RESPONSE_SEND_PEER_INFO;
                 String8 uuid = info.peer_uuid;
                 if (redis && redis->redisInterface()->isKeyExist(uuid)) { // 当键存在时
                     redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
@@ -109,10 +109,10 @@ void UdpServer::onReadEvent()
                     response.statusCode = (uint16_t)P2PStatus::NO_CONTENT;
                     strcpy(response.msg, Status2String(P2PStatus::NO_CONTENT).c_str());
                 }
-                ret = ProtocolGenerator::generator(P2P_RESPONSE_SEND_PEER_INFO, (uint8_t *)&response, P2S_Response_Size);
+                ret = ProtocolGenerator::generator(P2S_RESPONSE_SEND_PEER_INFO, (uint8_t *)&response, P2S_Response_Size);
             }
             break;
-        case P2P_REQUEST_HEARTBEAT_DETECT:
+        case P2S_REQUEST_HEARTBEAT_DETECT:
             {
                 bool shouldResponse = false;
                 {
@@ -136,14 +136,14 @@ void UdpServer::onReadEvent()
                     }
                 }
                 if (shouldResponse) {
-                    response.flag = P2P_RESPONSE_HEARTBEAT_DETECT;
+                    response.flag = P2S_RESPONSE_HEARTBEAT_DETECT;
                     String8 uuid = info.peer_uuid;
                     if (redis) {
                         redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
                         redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
                             String8::format("%u", addr.getPort()));
                     }
-                    ret = ProtocolGenerator::generator(P2P_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
+                    ret = ProtocolGenerator::generator(P2S_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
                 }
             }
             break;
