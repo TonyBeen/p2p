@@ -165,7 +165,8 @@ void P2PSession::onReadEvent(int fd)
             }
             log.appendFormat("0x%02x ", retsult[i]);
         }
-        LOGD("%s() send(%d): %s", __func__, retsult.size(), log.c_str());
+        LOGD("%s() send(%d) to client(%d) peer_info %zu: %s", __func__, 
+            retsult.size(), mClientSocket->socket(), peerInfoVec.size(), log.c_str());
         mClientSocket->send(retsult);
 
         peerInfoVec.clear();

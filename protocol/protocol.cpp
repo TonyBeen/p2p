@@ -49,7 +49,7 @@ static inline uint8_t *encode16u(uint8_t *buf, uint16_t n)
     *(buf + 0) = ((n >> 0) & 0xFF);
     *(buf + 1) = ((n >> 8) & 0xFF);
 #elif EULAR_BYTE_ORDER == EULAR_LITTLE_ENDIAN
-    *(buf + 0) = n;
+    *(uint16_t *)(buf) = n;
 #else
 #error "Unknown byte order. please check endian.hpp!"
 #endif
