@@ -78,7 +78,7 @@ void P2PSession::onReadEvent(int fd)
                 memcpy(&info, data.const_data(), data.size());
                 response.flag = P2S_RESPONSE_SEND_PEER_INFO;
                 String8 name = info.peer_name;
-                mUUIDKey = String8::format("%s+%s", name.c_str(), addr->getIP().c_str());
+                mUUIDKey = String8::format("%s+%s", name.c_str(), addr->dump().c_str());
                 if (mRefresh && redis != nullptr) {
                     redis->redisInterface()->delKey(mUuid.uuid());
                 }
