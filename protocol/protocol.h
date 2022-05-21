@@ -30,6 +30,7 @@
 #define P2S_RESPONSE_CONNECT_TO_PEER    (P2S_RESPONSE + 3)  // 服务端响应客户端请求连接
 #define P2S_RESPONSE_CONNECT_TO_ME      (P2S_RESPONSE + 4)  // 服务器响应对端有人要建立连接
 #define P2S_RESPONSE_HEARTBEAT_DETECT   (P2S_RESPONSE + 5)  // 服务端用于udp的心跳检测包(由服务端主动发起)
+#define P2S_RESPONSE_STATUS             (P2S_RESPONSE + 6)  // 服务器响应状态
 
 #define UUID_SIZE       48
 #define PEER_NAME_SIZE  32
@@ -159,16 +160,15 @@ static const uint32_t P2S_Response_Size = sizeof(P2S_Response);
     XX(431, REQUEST_HEADER_FIELDS_TOO_LARGE, Request Header Fields Too Large) \
     XX(451, UNAVAILABLE_FOR_LEGAL_REASONS,   Unavailable For Legal Reasons)   \
     XX(500, INTERNAL_SERVER_ERROR,           Internal Server Error)           \
-    XX(501, NOT_IMPLEMENTED,                 Not Implemented)                 \
+    XX(501, KCP_CREATE_ERROR,                Create Kcp Error)                \
     XX(502, BAD_GATEWAY,                     Bad Gateway)                     \
     XX(503, SERVICE_UNAVAILABLE,             Service Unavailable)             \
     XX(504, GATEWAY_TIMEOUT,                 Gateway Timeout)                 \
-    XX(505, HTTP_VERSION_NOT_SUPPORTED,      HTTP Version Not Supported)      \
-    XX(506, VARIANT_ALSO_NEGOTIATES,         Variant Also Negotiates)         \
     XX(507, INSUFFICIENT_STORAGE,            Insufficient Storage)            \
     XX(508, LOOP_DETECTED,                   Loop Detected)                   \
     XX(510, NOT_EXTENDED,                    Not Extended)                    \
     XX(511, NETWORK_AUTHENTICATION_REQUIRED, Network Authentication Required) \
+    XX(512, NETWORK_UNREADCHABLE,            Network Unreachable)             \
 
 
 enum class P2PStatus {

@@ -92,12 +92,13 @@ void UdpServer::onReadEvent()
             addr.getIP().c_str(), addr.getPort(), parser.commnd());
         switch (parser.commnd()) {
         case P2S_REQUEST_SEND_PEER_INFO:    // 客户端想要建立udp连接，此时对端发送的应该是tcp回复的uuid
+        {
             {
                 memcpy(&info, data.const_data(), data.size());
                 LOGD("uuid: %s", info.peer_uuid);
                 // 插入数据到client map
                 AutoLock<Mutex> lock(mMutex);
-                mUdpClientMap[info.peer_uuid] = Time::Abstime();
+                mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
             }
             {
                 response.flag = P2S_RESPONSE_SEND_PEER_INFO;
@@ -112,41 +113,66 @@ void UdpServer::onReadEvent()
                 ret = ProtocolGenerator::generator(P2S_RESPONSE_SEND_PEER_INFO, (uint8_t *)&response, P2S_Response_Size);
             }
             break;
+        }
         case P2S_REQUEST_HEARTBEAT_DETECT:
+        {
+            bool shouldResponse = false;
             {
-                bool shouldResponse = false;
-                {
-                    memcpy(&info, data.const_data(), data.size());
-                    LOGD("uuid: %s", info.peer_uuid);
+                memcpy(&info, data.const_data(), data.size());
+                LOGD("uuid: %s", info.peer_uuid);
 
-                    if (redis) {    // 先从redis检查key是否还存在
-                        if (redis->redisInterface()->isKeyExist(info.peer_uuid) == false) {
-                            mUdpClientMap.erase(info.peer_uuid);
-                        }
-                    }
-                    // 更新用户数据信息
-                    AutoLock<Mutex> lock(mMutex);
-                    const auto &it = mUdpClientMap.find(info.peer_uuid);
-                    if (it != mUdpClientMap.end()) {
-                        mUdpClientMap[info.peer_uuid] = Time::Abstime();
-                        shouldResponse = true;
-                    } else {
-                        response.statusCode = (uint16_t)P2PStatus::NO_CONTENT;
-                        strcpy(response.msg, Status2String(P2PStatus::NO_CONTENT).c_str());
+                if (redis) {    // 先从redis检查key是否还存在
+                    if (redis->redisInterface()->isKeyExist(info.peer_uuid) == false) {
+                        mUdpClientMap.erase(info.peer_uuid);
                     }
                 }
-                if (shouldResponse) {
-                    response.flag = P2S_RESPONSE_HEARTBEAT_DETECT;
-                    String8 uuid = info.peer_uuid;
-                    if (redis) {
-                        redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
-                        redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
-                            String8::format("%u", addr.getPort()));
-                    }
-                    ret = ProtocolGenerator::generator(P2S_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
+                // 更新用户数据信息
+                AutoLock<Mutex> lock(mMutex);
+                const auto &it = mUdpClientMap.find(info.peer_uuid);
+                if (it != mUdpClientMap.end()) {
+                    mUdpClientMap[info.peer_uuid] = std::make_pair(addr, Time::Abstime());
+                    shouldResponse = true;
+                } else {
+                    response.statusCode = (uint16_t)P2PStatus::NO_CONTENT;
+                    strcpy(response.msg, Status2String(P2PStatus::NO_CONTENT).c_str());
                 }
             }
+            if (shouldResponse) {
+                response.flag = P2S_RESPONSE_HEARTBEAT_DETECT;
+                String8 uuid = info.peer_uuid;
+                if (redis) {
+                    redis->redisInterface()->hashSetFiledValue(uuid, "udphost", addr.getIP());
+                    redis->redisInterface()->hashSetFiledValue(uuid, "udpport",
+                        String8::format("%u", addr.getPort()));
+                }
+                ret = ProtocolGenerator::generator(P2S_RESPONSE_HEARTBEAT_DETECT, (uint8_t *)&response, P2S_Response_Size);
+            }
             break;
+        }
+        case P2S_REQUEST_CONNECT_TO_PEER:
+        {
+            // udp接收数据需要两个Peer_Info, 一个自己的，一个对端的
+            memcpy(&info, parser.data().const_data(), Peer_Info_Size);
+            String8 initiator_uuid = info.peer_uuid;
+            memcpy(&info, parser.data().const_data() + Peer_Info_Size, Peer_Info_Size);
+            String8 peer_uuid = info.peer_uuid;
+
+            sockaddr_in peer_addr;
+            sockaddr_in initiator_addr = addr.getsockaddr();
+            {
+                AutoLock<Mutex> lock(mMutex);
+                auto it = mUdpClientMap.find(peer_uuid);
+                if (it == mUdpClientMap.end()) {
+                    response.statusCode = (uint16_t)P2PStatus::NOT_FOUND;
+                    strcpy(response.msg, Status2String(P2PStatus::NOT_FOUND).c_str());
+                    ret = ProtocolGenerator::generator(P2S_RESPONSE_CONNECT_TO_PEER, (uint8_t *)&response, P2S_Response_Size);
+                    break;
+                }
+                peer_addr = it->second.first.getsockaddr();
+            }
+            onConnectToPeer(peer_uuid, &peer_addr, initiator_uuid, &initiator_addr);
+            break;
+        }
         default:
             break;
         }
@@ -165,12 +191,34 @@ void UdpServer::onReadEvent()
     }
 }
 
+/**
+ * @brief 从服务器拿到的IP:Port无法连接，需要借助服务器来连接
+ *
+ * @param peer_uuid 对端uuid
+ * @param peer_addr 对端addr
+ * @param initiator_uuid 发起人uuid
+ * @param initiator_addr 发起人地址
+ * @return true 成功，false 失败
+ */
+bool UdpServer::onConnectToPeer(const String8 &peer_uuid, const sockaddr_in *peer_addr,
+                                const String8 &initiator_uuid, const sockaddr_in *initiator_addr)
+{
+    LOG_ASSERT2(peer_addr && initiator_addr);
+    Peer_Info info;
+    info.host_binary = initiator_addr->sin_addr.s_addr;
+    info.port_binary = initiator_addr->sin_port;
+    strcpy(info.peer_uuid, initiator_uuid.c_str());
+
+    ByteBuffer buffer = ProtocolGenerator::generator(P2S_RESPONSE_CONNECT_TO_ME, (uint8_t *)&info, Peer_Info_Size);
+    return Socket::sendto(buffer, Address(*peer_addr)) > 0;
+}
+
 void UdpServer::onTimerEvent()
 {
     AutoLock<Mutex> lock(mMutex);
     uint64_t currentTimeMS = Time::Abstime();
     for (auto it = mUdpClientMap.begin(); it != mUdpClientMap.end();) {
-        if (it->second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
+        if (it->second.second < (currentTimeMS - mDisconnectionTimeoutMS)) {    // 当超过3s未收到数据则认为其断开连接
             auto redis = RedisManager::get()->getRedis();
             if (redis && redis->redisInterface()->isKeyExist(it->first)) {
                 static const char *fields[] = { "udphost", "udpport" };

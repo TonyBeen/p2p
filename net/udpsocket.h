@@ -31,15 +31,17 @@ public:
     void stop();
 
     void onReadEvent();
-    void onWriteEvent();
     void onTimerEvent();
+
+protected:
+    bool onConnectToPeer(const String8 &peer_uuid, const sockaddr_in *addr, const String8 &initiator_uuid, const sockaddr_in *);
 
 protected:
     IOManager*  mIOWorker;
     IOManager*  mProcessWorker;
-    std::map<String8, uint64_t>  mUdpClientMap; // uuid, address, 上次发送数据的时间
-    Mutex       mMutex;                     // 保证mUdpClientMap的增删不冲突
-    uint32_t    mDisconnectionTimeoutMS;    // 超过此时间未发送数据意味着断开连接
+    std::map<String8, std::pair<Address, uint64_t>>  mUdpClientMap; // uuid, address, 上次发送数据的时间 协助检测用户是否连接
+    Mutex       mMutex;                             // 保证mUdpClientMap的增删不冲突
+    uint32_t    mDisconnectionTimeoutMS;            // 超过此时间未发送数据意味着断开连接
     uint64_t    mTimerID;
     Epoll::SP   mEpoll;
 };

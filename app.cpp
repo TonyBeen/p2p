@@ -182,8 +182,6 @@ int Application::main()
     IOManager *acceptWorker = new (std::nothrow)IOManager(1, false, "accept-worker");
     IOManager *ioWorker = new (std::nothrow)IOManager(ioWorkerCount, false, "io-worker");
     IOManager *processWorker = new (std::nothrow)IOManager(processWorkerCount, true, "process-worker");
-    LOG_ASSERT2(acceptWorker || ioWorker || processWorker);
-    LOGI("acceptWorker %p; ioWorker %p; processWorker %p", acceptWorker, ioWorker, processWorker);
     acceptWorker->start();
     ioWorker->start();
     processWorker->start();
@@ -191,8 +189,6 @@ int Application::main()
     Epoll::SP epoll(new (std::nothrow)Epoll(processWorker, ioWorker));
     UdpServer::SP udpServer(new (std::nothrow)UdpServer(epoll, ioWorker, processWorker));
     P2PService::SP p2pService(new (std::nothrow)P2PService(epoll, processWorker, ioWorker, acceptWorker));
-    LOG_ASSERT2(epoll || udpServer || p2pService);
-    LOGI("epoll: %p; udpserver: %p; p2pservice: %p", epoll.get(), udpServer.get(), p2pService.get());
     p2pService->bind(Address(tcphost, tcpport));
     udpServer->bind(Address(udphost, udpport));
     p2pService->listen();
