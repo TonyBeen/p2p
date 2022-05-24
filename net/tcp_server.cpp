@@ -25,6 +25,7 @@ TcpServer::TcpServer(IOManager *worker, IOManager *io_worker, IOManager *accept_
     mStep = TcpStep::SOCKET;
     mRecvTimeOut = Config::Lookup<uint64_t>("tcp.recv_timeout", 1000);
     mSendTimeOut = Config::Lookup<uint64_t>("tcp.send_timeout", 2000);
+    mKeepAliveTime = Config::Lookup<uint16_t>("tcp.keep_alive_time", 30);
 }
 
 TcpServer::~TcpServer()
@@ -98,6 +99,7 @@ void TcpServer::start_accept()
         if (client != nullptr) {
             client->settimeout(SO_RCVTIMEO, mRecvTimeOut);
             client->settimeout(SO_SNDTIMEO, mSendTimeOut);
+            client->setOption<int>(SOL_SOCKET, SO_KEEPALIVE, mKeepAliveTime);
             mIOWorker->schedule(std::bind(&TcpServer::handle_client, this, client));
         }
     }

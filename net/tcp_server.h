@@ -43,6 +43,7 @@ protected:
     TcpStep     mStep;          // 流程
     uint64_t    mRecvTimeOut;   // 接收超时
     uint64_t    mSendTimeOut;   // 发送超时
+    uint16_t    mKeepAliveTime; // 心跳检测
     IOManager  *mWorker;        // 处理一般的事件
     IOManager  *mIOWorker;      // 处理IO事件
     IOManager  *mAcceptWorker;  // 处理接收事件
