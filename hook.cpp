@@ -89,7 +89,7 @@ template<typename OriginFun, typename... Args>
 static ssize_t do_io(int fd, OriginFun fun, const char* hook_fun_name,
         uint32_t event, int type, Args&&... args)
 {
-    LOGI("%s() fd: %d, %p, %s\n", __func__, fd, fun, hook_fun_name);
+    LOGD("%s() fd: %d, %p, %s\n", __func__, fd, fun, hook_fun_name);
     if (!eular::gHookEnable) {
         return fun(fd, std::forward<Args>(args)...);
     }

@@ -74,14 +74,14 @@ bool Application::init(int argc, char **argv)
 
     ConfigManager::get()->Init(mConfigPath);
 
-    String8 level = Config::Lookup<String8>("log.level", "info");
-    LogLevel::Level l = LogLevel::String2Level(level.c_str());
+    String8 loglevel = Config::Lookup<String8>("log.level", "info");
+    LogLevel::Level level = LogLevel::String2Level(loglevel.c_str());
     bool isSync = Config::Lookup<bool>("log.sync", true);
     String8 target = Config::Lookup<String8>("log.target", "stdout");
     bool hasStdOut = target.contains("stdout");
     bool hasFileOut = target.contains("fileout");
     bool hasConsoleOut = target.contains("consoleout");
-    InitLog(l, isSync);
+    InitLog(level);
 
     if (!hasStdOut) {
         delOutputNode(LogWrite::STDOUT);
