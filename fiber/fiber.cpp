@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "fiber.h"
+#include "config.h"
 #include <log/log.h>
 #include <atomic>
 #include <exception>
@@ -22,8 +23,7 @@ static thread_local Fiber::SP gThreadMainFiber = nullptr;   // 一个线程的�
 
 uint64_t getStackSize()
 {
-    // TODO: 从配置文件中获取栈大小
-    static uint64_t size = 1024 * 1024;
+    static uint64_t size = Config::Lookup<uint64_t>("fiber.stack_size", 1024 * 128);
     return size;
 }
 
