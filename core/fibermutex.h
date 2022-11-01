@@ -11,7 +11,7 @@
 #include "fiber/scheduler.h"
 #include <utils/mutex.h>
 #include <list>
-#include <stl_pair.h>
+#include <map>
 
 namespace eular {
 

@@ -111,4 +111,9 @@ RedisInterface *RedisPool::RedisAPI::redisInterface()
     return interface;
 }
 
+RedisInterface *RedisPool::RedisAPI::operator->()
+{
+    return interface;
+}
+
 } // namespace eular

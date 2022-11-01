@@ -41,7 +41,7 @@ void FiberSemaphore::wait()
     {
         AutoLock<Mutex> lock(mFiberMutex);
         if (mConcurrency > 0) {
-            -mConcurrency;
+            --mConcurrency;
             return;
         }
         mWaiters.push_back(std::make_pair(Scheduler::GetThis(), Fiber::GetThis()));

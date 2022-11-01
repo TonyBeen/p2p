@@ -33,6 +33,7 @@ public:
         RedisAPI(uint32_t idx, RedisInterface *api, RedisPool *pool);
         ~RedisAPI();
         RedisInterface *redisInterface();
+        RedisInterface *operator->();
     };
 
     std::shared_ptr<RedisAPI> getRedis();
