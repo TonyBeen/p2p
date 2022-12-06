@@ -1,5 +1,5 @@
 # p2p
-p2p server &amp; client
+p2p server
 
 #### 依赖
 > `git clone git@github.com:TonyBeen/third_party.git`
