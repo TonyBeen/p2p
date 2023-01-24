@@ -147,7 +147,7 @@ void Signalcatch(int sig)
         // 产生堆栈信息;
         CallStack stack;
         stack.update();
-        stack.log("SIGSEGV", eular::LogLevel::FATAL);
+        stack.log("SIGSEGV", eular::LogLevel::LEVEL_FATAL);
     }
 
     if (sig == SIGABRT) {
