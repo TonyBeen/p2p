@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "hook.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <log/log.h>
 #include "iomanager.h"
 #include "fdmanager.h"

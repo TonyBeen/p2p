@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "redis.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <log/log.h>
 
 #define LOG_TAG "redis"

@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "iomanager.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <utils/exception.h>
 #include <log/log.h>
 #include <sys/epoll.h>
