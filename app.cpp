@@ -76,21 +76,22 @@ bool Application::init(int argc, char **argv)
 
     String8 loglevel = Config::Lookup<String8>("log.level", "info");
     LogLevel::Level level = LogLevel::String2Level(loglevel.c_str());
-    bool isSync = Config::Lookup<bool>("log.sync", true);
+    String8 logPath = Config::Lookup<String8>("log.path", "");
     String8 target = Config::Lookup<String8>("log.target", "stdout");
     bool hasStdOut = target.contains("stdout");
     bool hasFileOut = target.contains("fileout");
     bool hasConsoleOut = target.contains("consoleout");
-    InitLog(level);
+    log::InitLog(level);
+    log::SetPath(logPath.c_str());
 
     if (!hasStdOut) {
-        delOutputNode(LogWrite::STDOUT);
+        log::delOutputNode(LogWrite::STDOUT);
     }
     if (hasFileOut) {
-        addOutputNode(LogWrite::FILEOUT);
+        log::addOutputNode(LogWrite::FILEOUT);
     }
     if (hasConsoleOut) {
-        addOutputNode(LogWrite::CONSOLEOUT);
+        log::addOutputNode(LogWrite::CONSOLEOUT);
     }
     
     return ret;
