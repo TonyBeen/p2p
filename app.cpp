@@ -75,22 +75,22 @@ bool Application::init(int argc, char **argv)
     ConfigManager::get()->Init(mConfigPath);
 
     String8 level = Config::Lookup<String8>("log.level", "info");
-    LogLevel::Level l = LogLevel::String2Level(level.c_str());
+    LogLevel::Level le = LogLevel::String2Level(level.c_str());
     bool isSync = Config::Lookup<bool>("log.sync", true);
     String8 target = Config::Lookup<String8>("log.target", "stdout");
     bool hasStdOut = target.contains("stdout");
     bool hasFileOut = target.contains("fileout");
     bool hasConsoleOut = target.contains("consoleout");
-    InitLog(l, isSync);
+    eular::log::InitLog(le);
 
     if (!hasStdOut) {
-        delOutputNode(LogWrite::STDOUT);
+        eular::log::delOutputNode(LogWrite::STDOUT);
     }
     if (hasFileOut) {
-        addOutputNode(LogWrite::FILEOUT);
+        eular::log::addOutputNode(LogWrite::FILEOUT);
     }
     if (hasConsoleOut) {
-        addOutputNode(LogWrite::CONSOLEOUT);
+        eular::log::addOutputNode(LogWrite::CONSOLEOUT);
     }
     
     return ret;
@@ -147,7 +147,7 @@ void Signalcatch(int sig)
         // 产生堆栈信息;
         CallStack stack;
         stack.update();
-        stack.log("SIGSEGV", eular::LogLevel::FATAL);
+        stack.log("SIGSEGV", eular::LogLevel::LEVEL_FATAL);
     }
 
     if (sig == SIGABRT) {

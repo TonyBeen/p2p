@@ -9,7 +9,7 @@
 #define __EULAR_P2P_PROTOCOL_H__
 
 #include "endian.hpp"
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <string>
 #include <stdint.h>
 

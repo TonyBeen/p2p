@@ -7,7 +7,7 @@
 
 #include "p2p_session.h"
 #include "db/redispool.h"
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <utils/mutex.h>
 #include <log/log.h>
 
