@@ -1,9 +1,9 @@
 # p2p
-p2p server &amp; client
+p2p server
 
 #### 依赖
-> git clone git@github.com:TonyBeen/third_party.git
-> git clone git@github.com:TonyBeen/eular.git
+> `git clone git@github.com:TonyBeen/third_party.git`
+> `git clone git@github.com:TonyBeen/eular.git`
 
 #### 库依赖说明
 `openssl libunwind hiredis yaml-cpp`
