@@ -81,16 +81,16 @@ bool Application::init(int argc, char **argv)
     bool hasStdOut = target.contains("stdout");
     bool hasFileOut = target.contains("fileout");
     bool hasConsoleOut = target.contains("consoleout");
-    eular::log::InitLog(level);
+    log::InitLog(level);
 
     if (!hasStdOut) {
-        eular::log::delOutputNode(LogWrite::STDOUT);
+        log::delOutputNode(LogWrite::STDOUT);
     }
     if (hasFileOut) {
-        eular::log::addOutputNode(LogWrite::FILEOUT);
+        log::addOutputNode(LogWrite::FILEOUT);
     }
     if (hasConsoleOut) {
-        eular::log::addOutputNode(LogWrite::CONSOLEOUT);
+        log::addOutputNode(LogWrite::CONSOLEOUT);
     }
     
     return ret;
