@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "hook.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <log/log.h>
 #include "iomanager.h"
 #include "fdmanager.h"
@@ -101,7 +101,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_fun_name,
 
     if (ctx->isClosed()) {
         errno = EBADF;
-        return eular::Status::UNKNOWN_ERROR;
+        return Status::UNKNOWN_ERROR;
     }
 
     if (!ctx->isSocket() || ctx->getUserNonoblock()) {
@@ -144,7 +144,7 @@ retry:
             if (timer) {
                 iom->delTimer(timer);
             }
-            return eular::Status::UNKNOWN_ERROR;
+            return Status::UNKNOWN_ERROR;
         } else {
             eular::Fiber::Yeild2Hold();
             if (timer) {
@@ -152,13 +152,13 @@ retry:
             }
             if (tinfo->cancelled) {
                 errno = tinfo->cancelled;
-                return eular::Status::UNKNOWN_ERROR;
+                return Status::UNKNOWN_ERROR;
             }
             goto retry;
         }
     }
 
-    return eular::Status::OK;
+    return Status::OK;
 }
 
 #ifdef __cplusplus
@@ -211,7 +211,7 @@ int socket(int domain, int type, int protocol) {
     if (fd == -1) {
         return fd;
     }
-    eular::FdManager::get()->get(fd, true);
+    eular::FdManager::Get()->get(fd, true);
     return fd;
 }
 
@@ -221,7 +221,7 @@ int connect_with_timeout(int fd, const struct sockaddr *addr, socklen_t addrlen,
         return connect_f(fd, addr, addrlen);
     }
 
-    eular::FdContext::SP fdctx = eular::FdManager::get()->get(fd);
+    eular::FdContext::SP fdctx = eular::FdManager::Get()->get(fd);
     if (!fdctx || fdctx->isClosed()) {
         errno = EBADF;
         return -1;
@@ -260,14 +260,14 @@ int connect_with_timeout(int fd, const struct sockaddr *addr, socklen_t addrlen,
     }
 
     int ret = iom->addEvent(fd, eular::IOManager::WRITE);
-    if (ret == eular::Status::OK) {
+    if (ret == Status::OK) {
         eular::Fiber::Yeild2Hold();
         if (timerUniqueId) {
             iom->delTimer(timerUniqueId);
         }
         if (sinfo->cancelled) {
             errno = sinfo->cancelled;
-            return eular::Status::TIMED_OUT;
+            return Status::TIMED_OUT;
         }
     } else {
         if (timerUniqueId) {
@@ -279,14 +279,14 @@ int connect_with_timeout(int fd, const struct sockaddr *addr, socklen_t addrlen,
     int error = 0;
     socklen_t len = sizeof(error);
     if (-1 == getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len)) {
-        return eular::Status::UNKNOWN_ERROR;
+        return Status::UNKNOWN_ERROR;
     }
     if (!error) {
-        return eular::Status::OK;
+        return Status::OK;
     }
 
     errno = error;
-    return eular::Status::UNKNOWN_ERROR;
+    return Status::UNKNOWN_ERROR;
 }
 
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
@@ -298,7 +298,7 @@ int accept(int s, struct sockaddr *addr, socklen_t *addrlen)
 {
     int fd = do_io(s, accept_f, "accept", eular::IOManager::READ, SO_RCVTIMEO, addr, addrlen);
     if(fd >= 0) {
-        eular::FdManager::get()->get(fd, true);
+        eular::FdManager::Get()->get(fd, true);
     }
     return fd;
 }
@@ -352,13 +352,13 @@ int close(int fd)
         return close_f(fd);
     }
 
-    eular::FdContext::SP ctxsp = eular::FdManager::get()->get(fd);
+    eular::FdContext::SP ctxsp = eular::FdManager::Get()->get(fd);
     if (ctxsp) {
         auto iom = eular::IOManager::GetThis();
         if (iom) {
             iom->cancelAll(fd);
         }
-        eular::FdManager::get()->del(fd);
+        eular::FdManager::Get()->del(fd);
     }
     return close_f(fd);
 }
@@ -371,7 +371,7 @@ int fcntl(int fd, int cmd, ... /* arg */ ) {
             {
                 int arg = va_arg(va, int);
                 va_end(va);
-                eular::FdContext::SP ctx = eular::FdManager::get()->get(fd);
+                eular::FdContext::SP ctx = eular::FdManager::Get()->get(fd);
                 if(!ctx || ctx->isClosed() || !ctx->isSocket()) {
                     return fcntl_f(fd, cmd, arg);
                 }
@@ -388,7 +388,7 @@ int fcntl(int fd, int cmd, ... /* arg */ ) {
             {
                 va_end(va);
                 int arg = fcntl_f(fd, cmd);
-                eular::FdContext::SP ctx = eular::FdManager::get()->get(fd);
+                eular::FdContext::SP ctx = eular::FdManager::Get()->get(fd);
                 if(!ctx || ctx->isClosed() || !ctx->isSocket()) {
                     return arg;
                 }
@@ -458,7 +458,7 @@ int ioctl(int d, unsigned long int request, ...) {
 
     if (FIONBIO == request) {
         bool user_nonblock = !!*(int*)arg;
-        eular::FdContext::SP ctx = eular::FdManager::get()->get(d);
+        eular::FdContext::SP ctx = eular::FdManager::Get()->get(d);
         if(!ctx || ctx->isClosed() || !ctx->isSocket()) {
             return ioctl_f(d, request, arg);
         }
@@ -477,7 +477,7 @@ int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t
     }
     if (level == SOL_SOCKET) {
         if(optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) {
-            eular::FdContext::SP ctx = eular::FdManager::get()->get(sockfd);
+            eular::FdContext::SP ctx = eular::FdManager::Get()->get(sockfd);
             if(ctx) {
                 const timeval* v = (const timeval*)optval;
                 ctx->setTimeOut(optname, v->tv_sec * 1000 + v->tv_usec / 1000);
